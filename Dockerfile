@@ -11,6 +11,8 @@ RUN apt-get update && apt-get install -y \
     libssl3 \
     ca-certificates \
     ffmpeg \
+    portaudio19-dev \
+    libportaudio2 \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy requirements first for better caching

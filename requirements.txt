@@ -11,3 +11,4 @@ redis
 websockets
 fastapi
 uvicorn
+sounddevice
