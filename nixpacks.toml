@@ -1,0 +1,6 @@
+# nixpacks.toml for Railway deployment
+[phases.setup]
+nixPkgs = ["...", "libuuid", "alsa-lib", "openssl_3"]
+
+[start]
+cmd = "LD_LIBRARY_PATH=${pkgs.lib.makeLibraryPath [ pkgs.libuuid pkgs.alsa-lib pkgs.openssl_3 ]} python main.py"

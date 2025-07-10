@@ -1,0 +1,4 @@
+vocode
+python-dotenv
+aiohttp
+openai
