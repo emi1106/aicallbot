@@ -1,14 +1,12 @@
 # nixpacks.toml for Railway deployment
-
-[variables]
-LD_LIBRARY_PATH = "/nix/store/*/lib:$LD_LIBRARY_PATH"
-NIX_LD_LIBRARY_PATH = "/nix/store/*/lib"
+# Note: If this fails, Railway should automatically detect and use Dockerfile instead
 
 [phases.setup]
-nixPkgs = ["python39", "util-linux", "libuuid", "alsa-lib", "openssl", "pkg-config", "glibc", "gcc-unwrapped"]
+nixPkgs = ["python39"]
 
-[phases.build]
-cmds = ["ln -sf /nix/store/*/lib/libuuid.so.1 /usr/lib/libuuid.so.1 || true"]
+[phases.install]
+# Let pip handle all dependencies
+cmds = ["pip install -r requirements.txt"]
 
 [start]
 cmd = "python main.py"
