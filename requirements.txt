@@ -2,3 +2,5 @@ vocode
 python-dotenv
 aiohttp
 openai
+twilio
+elevenlabs

@@ -10,6 +10,7 @@ RUN apt-get update && apt-get install -y \
     libasound2 \
     libssl3 \
     ca-certificates \
+    ffmpeg \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy requirements first for better caching
@@ -27,6 +28,7 @@ EXPOSE 8000
 # Set environment variables
 ENV PYTHONUNBUFFERED=1
 ENV PYTHONDONTWRITEBYTECODE=1
+ENV PORT=8000
 
 # Run the application
 CMD ["python", "main.py"]
