@@ -1,6 +1,13 @@
 # nixpacks.toml for Railway deployment
+
+[variables]
+LD_LIBRARY_PATH = "/nix/store/*/lib"
+
 [phases.setup]
-nixPkgs = ["python39", "libuuid", "alsa-lib", "openssl_3"]
+nixPkgs = ["python39", "util-linux", "alsa-lib", "openssl"]
+
+[phases.install]
+aptPkgs = ["libuuid1", "libasound2", "libssl3"]
 
 [start]
 cmd = "python main.py"
