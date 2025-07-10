@@ -4,3 +4,10 @@ aiohttp
 openai
 twilio
 elevenlabs
+vonage
+pydub
+azure-cognitiveservices-speech
+redis
+websockets
+fastapi
+uvicorn
