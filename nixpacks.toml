@@ -1,10 +1,14 @@
 # nixpacks.toml for Railway deployment
 
 [variables]
-LD_LIBRARY_PATH = "$LD_LIBRARY_PATH:/nix/store/*/lib"
+LD_LIBRARY_PATH = "/nix/store/*/lib:$LD_LIBRARY_PATH"
+NIX_LD_LIBRARY_PATH = "/nix/store/*/lib"
 
 [phases.setup]
-nixPkgs = ["python39", "util-linux", "alsa-lib", "openssl", "pkg-config"]
+nixPkgs = ["python39", "util-linux", "libuuid", "alsa-lib", "openssl", "pkg-config", "glibc", "gcc-unwrapped"]
+
+[phases.build]
+cmds = ["ln -sf /nix/store/*/lib/libuuid.so.1 /usr/lib/libuuid.so.1 || true"]
 
 [start]
 cmd = "python main.py"
