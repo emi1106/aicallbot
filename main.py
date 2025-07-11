@@ -1,10 +1,9 @@
-# main.py
+# main.py (The Final, Correct Architecture)
 
 import logging
 import os
 from vocode.streaming.telephony.server.base import TelephonyServer
 from vocode.streaming.models.events import EventType
-from vocode.streaming.models.telephony import TwilioCallConfig
 from config import ConfigManager
 from agent import StefanAgentActions
 
@@ -19,19 +18,20 @@ def main():
         config_manager = ConfigManager()
         agent_actions = StefanAgentActions(config_manager)
 
-        # Create a single, pre-configured call config to speed up connections
-        call_config = TwilioCallConfig(
-            twilio_config=config_manager.twilio_config,
-            agent_config=config_manager.agent_config,
-            transcriber_config=config_manager.transcriber_config,
-            synthesizer_config=config_manager.synthesizer_config,
-            inbound_url="/inbound_call",
-        )
-
-        # Create the Telephony Server with the pre-configured config
+        # Create the Telephony Server.
+        # We use inbound_call_configs (plural) to define a template
+        # for calls that come into a specific URL.
         telephony_server = TelephonyServer(
             base_url=config_manager.base_url,
-            inbound_call_config=call_config,
+            inbound_call_configs=[
+                {
+                    "url": "/inbound_call",
+                    "agent_config": config_manager.agent_config,
+                    "twilio_config": config_manager.twilio_config,
+                    "transcriber_config": config_manager.transcriber_config,
+                    "synthesizer_config": config_manager.synthesizer_config,
+                }
+            ],
         )
 
         # Register the event handler for when a call ends
@@ -39,7 +39,7 @@ def main():
             EventType.CALL_ENDED, agent_actions.handle_call_end
         )
 
-        # Get the port from environment variables or default to 8000
+        # Get the port from environment variables or default to 8080
         port = int(os.getenv("PORT", 8080))
         
         logger.info(f"Starting Stefan AI Agent Server on port {port}...")
