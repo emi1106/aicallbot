@@ -6,6 +6,7 @@ from vocode.streaming.models.agent import ChatGPTAgentConfig
 from vocode.streaming.models.synthesizer import ElevenLabsSynthesizerConfig
 from vocode.streaming.models.transcriber import DeepgramTranscriberConfig
 from vocode.streaming.models.telephony import TwilioConfig
+from vocode.streaming.models.message import BaseMessage
 from prompt import LOVITURA_DE_GRATIE_PROMPT
 
 class ConfigManager:
@@ -19,8 +20,8 @@ class ConfigManager:
 
         # Agent Config (The "Brain")
         self.agent_config = ChatGPTAgentConfig(
-            initial_message="Bună ziua, numele meu este Ștefan de la WEMI, ne ocupam cu dezvoltarea web. Cu cine vorbesc?",
-            prompt_preamble=LOVITURA_DE_GRATIE_PROMPT,
+        initial_message=BaseMessage(text="Bună ziua, numele meu este Ștefania de la WEMI, ne ocupam cu dezvoltarea web. Cu cine vorbesc?"),
+        prompt_preamble=LOVITURA_DE_GRATIE_PROMPT,
             generate_responses=True,
             model_name="gpt-4o", # Use the fast and smart "omni" model
             temperature=0.7,
