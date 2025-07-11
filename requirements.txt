@@ -1,4 +1,4 @@
-vocode
+vocode==0.2.14
 python-dotenv
 aiohttp
 openai
