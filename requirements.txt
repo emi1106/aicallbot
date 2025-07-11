@@ -6,3 +6,4 @@ elevenlabs
 fastapi
 uvicorn[standard]
 pydub
+deepgram-sdk
