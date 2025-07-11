@@ -21,6 +21,7 @@ def main():
         # Create the Telephony Server.
         # We use inbound_call_configs (plural) to define a template
         # for calls that come into a specific URL.
+       # Create the Telephony Server.
         telephony_server = TelephonyServer(
             base_url=config_manager.base_url,
             inbound_call_configs=[
@@ -32,8 +33,9 @@ def main():
                     "synthesizer_config": config_manager.synthesizer_config,
                 }
             ],
+            config_manager=config_manager, # <-- ADD THIS LINE
         )
-
+        
         # Register the event handler for when a call ends
         telephony_server.events_manager.register_handler(
             EventType.CALL_ENDED, agent_actions.handle_call_end
