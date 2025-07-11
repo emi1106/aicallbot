@@ -49,6 +49,9 @@ class ConfigManager:
             similarity_boost=0.75,
             model_id="eleven_multilingual_v2",
             optimize_streaming_latency=1,
+            # Add the following required parameters for telephony
+            sampling_rate=8000,
+            audio_encoding="mulaw",
         )
 
         # Twilio Config (The "Phone Line")
