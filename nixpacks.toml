@@ -1,10 +1,17 @@
 # nixpacks.toml for Railway deployment
 
-# Phase 1: Install a complete set of system packages required by the Azure Speech SDK (a sub-dependency of vocode).
+# Phase 1: Install a complete set of system packages required by the application's dependencies.
 [phases.setup]
-nixPkgs = ["...", "libuuid", "alsa-lib", "openssl_3"]
+nixPkgs = [
+    "...",
+    "libuuid",        # For Azure Speech SDK dependency
+    "alsa-lib",       # For Azure Speech SDK dependency
+    "openssl_3",      # For Azure Speech SDK dependency
+    "portaudio",      # For sounddevice dependency (fixes the crash)
+    "ffmpeg"          # For pydub dependency (fixes the warning)
+]
 
 # Phase 2: Define how to start the app, setting the environment variable
-# correctly before the command runs. This fixes the library path issue.
+# correctly so the application can find the libraries at runtime.
 [start]
-cmd = "LD_LIBRARY_PATH=${pkgs.lib.makeLibraryPath [ pkgs.libuuid pkgs.alsa-lib pkgs.openssl_3 ]} python main.py"
+cmd = "LD_LIBRARY_PATH=${pkgs.lib.makeLibraryPath [ pkgs.libuuid pkgs.alsa-lib pkgs.openssl_3 pkgs.portaudio ]} python main.py"
