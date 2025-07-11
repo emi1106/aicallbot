@@ -4,7 +4,7 @@ import logging
 import os
 from vocode.streaming.telephony.server.base import TelephonyServer
 from vocode.streaming.models.events import EventType
-from vocode.streaming.models.telephony import TwilioCallConfig, EndpointingConfig
+from vocode.streaming.models.telephony import TwilioCallConfig
 from config import ConfigManager
 from agent import StefanAgentActions
 
@@ -25,9 +25,7 @@ def main():
             agent_config=config_manager.agent_config,
             transcriber_config=config_manager.transcriber_config,
             synthesizer_config=config_manager.synthesizer_config,
-            endpointing_config=EndpointingConfig(
-                url="/inbound_call"
-            )
+            inbound_url="/inbound_call",
         )
 
         # Create the Telephony Server with the pre-configured config
