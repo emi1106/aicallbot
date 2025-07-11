@@ -1,14 +1,8 @@
-vocode-core
 python-dotenv
 aiohttp
 openai>=1.12.0
 twilio
 elevenlabs
-vonage
-pydub
-azure-cognitiveservices-speech
-redis
-websockets
 fastapi
-uvicorn
-sounddevice
+uvicorn[standard]
+pydub

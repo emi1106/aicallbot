@@ -1,7 +1,9 @@
 import asyncio
 import logging
-from vocode.streaming.telephony.server.base import TelephonyServer
-from vocode.streaming.models.events import EventType
+from fastapi import FastAPI, Request, Response
+from fastapi.responses import PlainTextResponse
+import uvicorn
+from twilio.twiml.voice_response import VoiceResponse
 from config import ConfigManager
 from agent import StefanAgentActions
 
@@ -9,88 +11,143 @@ from agent import StefanAgentActions
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+app = FastAPI(title="Stefan AI Phone Bot")
 
-class StefanTelephonyServer:
-    """Main telephony server for Stefan AI phone bot"""
-    
-    def __init__(self):
-        """Initialize the server with configuration and agent actions"""
-        self.config = ConfigManager()
-        self.agent_actions = StefanAgentActions(self.config)
-        self.server = self._create_server()
-    
-    def _create_server(self) -> TelephonyServer:
-        """Create and configure the TelephonyServer"""
-        server = TelephonyServer(
-            agent_config=self.config.agent_config,
-            transcriber_config=self.config.transcriber_config,
-            synthesizer_config=self.config.synthesizer_config,
-            twilio_config=self.config.twilio_config,
-            base_url=self.config.base_url,
-            port=self.config.port
-        )
-        
-        # Register event handlers
-        server.register_event_handler(
-            EventType.CALL_ENDED,
-            self._handle_call_ended
-        )
-        
-        return server
-    
-    async def _handle_call_ended(self, call):
-        """
-        Handle call ended events
-        
-        Args:
-            call: The Vocode call object
-        """
-        try:
-            logger.info(f"Call ended: {call.id}")
-            
-            # Extract call details
-            call_details = self.agent_actions.extract_call_details(call)
-            
-            # Get transcript
-            transcript = getattr(call, 'transcript', '') or ''
-            
-            if not transcript:
-                logger.warning(f"No transcript available for call {call.id}")
-                transcript = "No transcript available"
-            
-            # Handle the call end processing
-            await self.agent_actions.handle_call_end(
-                call_id=call.id,
-                transcript=transcript,
-                call_details=call_details
-            )
-            
-        except Exception as e:
-            logger.error(f"Error handling call ended event: {str(e)}")
-    
-    async def start(self):
-        """Start the telephony server"""
-        logger.info("Starting Stefan AI Telephony Server...")
-        logger.info(f"Server will listen on 0.0.0.0:{self.config.port}")
-        
-        try:
-            await self.server.run(host="0.0.0.0", port=self.config.port)
-        except Exception as e:
-            logger.error(f"Error starting server: {str(e)}")
-            raise
+# Global variables
+config = None
+agent_actions = None
 
-
-async def main():
-    """Main application entry point"""
+@app.on_event("startup")
+async def startup_event():
+    """Initialize configuration and agent on startup"""
+    global config, agent_actions
     try:
-        server = StefanTelephonyServer()
-        await server.start()
-    except KeyboardInterrupt:
-        logger.info("Server stopped by user")
+        config = ConfigManager()
+        agent_actions = StefanAgentActions(config)
+        logger.info("Stefan AI Phone Bot initialized successfully")
     except Exception as e:
-        logger.error(f"Application error: {str(e)}")
+        logger.error(f"Failed to initialize: {str(e)}")
         raise
 
+@app.get("/")
+async def health_check():
+    """Health check endpoint"""
+    return {"status": "healthy", "message": "Stefan AI Phone Bot is running"}
+
+@app.post("/webhook/call")
+async def handle_incoming_call(request: Request):
+    """Handle incoming Twilio calls"""
+    try:
+        # Get form data from Twilio
+        form_data = await request.form()
+        call_sid = form_data.get("CallSid")
+        from_number = form_data.get("From")
+        to_number = form_data.get("To")
+        
+        logger.info(f"Incoming call: {call_sid} from {from_number} to {to_number}")
+        
+        # Create TwiML response
+        response = VoiceResponse()
+        
+        # Start the conversation
+        response.say(
+            "Bună ziua! Sunt Ștefan de la WEMI. Vă mulțumesc că ați răspuns. Cu cine vorbesc?",
+            voice="alice",
+            language="ro-RO"
+        )
+        
+        # Set up recording and continue to conversation handler
+        response.record(
+            action="/webhook/recording",
+            method="POST",
+            max_length=300,  # 5 minutes max
+            play_beep=False,
+            transcribe=True,
+            transcribe_callback="/webhook/transcription"
+        )
+        
+        return PlainTextResponse(str(response), media_type="application/xml")
+        
+    except Exception as e:
+        logger.error(f"Error handling incoming call: {str(e)}")
+        # Return a simple error response
+        response = VoiceResponse()
+        response.say("Ne pare rău, a apărut o problemă tehnică. Vă rugăm să sunați din nou.", 
+                    voice="alice", language="ro-RO")
+        return PlainTextResponse(str(response), media_type="application/xml")
+
+@app.post("/webhook/recording")
+async def handle_recording(request: Request):
+    """Handle call recording completion"""
+    try:
+        form_data = await request.form()
+        call_sid = form_data.get("CallSid")
+        recording_url = form_data.get("RecordingUrl")
+        
+        logger.info(f"Recording completed for call {call_sid}: {recording_url}")
+        
+        # Simple response to end the call
+        response = VoiceResponse()
+        response.say("Mulțumesc pentru timpul acordat. O zi frumoasă!", 
+                    voice="alice", language="ro-RO")
+        response.hangup()
+        
+        return PlainTextResponse(str(response), media_type="application/xml")
+        
+    except Exception as e:
+        logger.error(f"Error handling recording: {str(e)}")
+        response = VoiceResponse()
+        response.hangup()
+        return PlainTextResponse(str(response), media_type="application/xml")
+
+@app.post("/webhook/transcription")
+async def handle_transcription(request: Request):
+    """Handle call transcription from Twilio"""
+    try:
+        form_data = await request.form()
+        call_sid = form_data.get("CallSid")
+        transcription_text = form_data.get("TranscriptionText", "")
+        
+        logger.info(f"Transcription received for call {call_sid}")
+        
+        if transcription_text and agent_actions:
+            # Process the transcription
+            await agent_actions.handle_call_end(
+                call_id=call_sid,
+                transcript=transcription_text,
+                call_details={
+                    "timestamp": form_data.get("DateCreated"),
+                    "phone_number": form_data.get("From"),
+                    "duration": form_data.get("CallDuration")
+                }
+            )
+        
+        return {"status": "processed"}
+        
+    except Exception as e:
+        logger.error(f"Error handling transcription: {str(e)}")
+        return {"status": "error", "message": str(e)}
+
+@app.post("/webhook/status")
+async def handle_call_status(request: Request):
+    """Handle call status updates from Twilio"""
+    try:
+        form_data = await request.form()
+        call_sid = form_data.get("CallSid")
+        call_status = form_data.get("CallStatus")
+        
+        logger.info(f"Call {call_sid} status: {call_status}")
+        
+        if call_status == "completed":
+            logger.info(f"Call {call_sid} completed")
+        
+        return {"status": "received"}
+        
+    except Exception as e:
+        logger.error(f"Error handling call status: {str(e)}")
+        return {"status": "error"}
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    port = int(config.port if config else 8000)
+    logger.info(f"Starting Stefan AI Phone Bot on port {port}")
+    uvicorn.run(app, host="0.0.0.0", port=port)

@@ -4,15 +4,9 @@ FROM python:3.9-slim
 # Set working directory
 WORKDIR /app
 
-# Install system dependencies required for Azure Speech SDK and audio processing
+# Install system dependencies
 RUN apt-get update && apt-get install -y \
-    libuuid1 \
-    libasound2 \
-    libssl3 \
     ca-certificates \
-    ffmpeg \
-    portaudio19-dev \
-    libportaudio2 \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy requirements first for better caching
