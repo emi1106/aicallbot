@@ -1,10 +1,9 @@
-# main.py (This is the correct code for vocode v0.2.14)
+# main.py (Final Robust Version)
 
 import logging
 import os
 from vocode.streaming.telephony.server.base import TelephonyServer
 from vocode.streaming.models.events import EventType
-from vocode.streaming.models.telephony import InboundCallConfig
 from config import ConfigManager
 from agent import StefanAgentActions
 
@@ -21,13 +20,13 @@ def main():
         telephony_server = TelephonyServer(
             base_url=config_manager.base_url,
             inbound_call_configs=[
-                InboundCallConfig(
-                    url="/inbound_call",
-                    agent_config=config_manager.agent_config,
-                    twilio_config=config_manager.twilio_config,
-                    transcriber_config=config_manager.transcriber_config,
-                    synthesizer_config=config_manager.synthesizer_config,
-                )
+                {
+                    "url": "/inbound_call",
+                    "agent_config": config_manager.agent_config,
+                    "twilio_config": config_manager.twilio_config,
+                    "transcriber_config": config_manager.transcriber_config,
+                    "synthesizer_config": config_manager.synthesizer_config,
+                }
             ],
             config_manager=config_manager,
         )
@@ -36,8 +35,8 @@ def main():
             EventType.CALL_ENDED, agent_actions.handle_call_end
         )
 
-        port = int(os.getenv("PORT", 8080))
-
+        port = int(os.getenv("PORT", 8000))
+        
         logger.info(f"Starting Stefan AI Agent Server on port {port}...")
 
         telephony_server.run(
