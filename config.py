@@ -17,7 +17,7 @@ class ConfigManager:
         self.base_url = os.getenv("BASE_URL")
 
         self.agent_config = ChatGPTAgentConfig(
-            initial_message="Bună ziua, numele meu este Ștefan de la WEMI, ne ocupam cu dezvoltarea web. Cu cine vorbesc?", # Reverted to plain string
+            initial_message={"text": "Bună ziua, numele meu este Ștefania de la WEMI, ne ocupam cu dezvoltarea web. Cu cine vorbesc?"}, # This is now a dictionary
             prompt_preamble=LOVITURA_DE_GRATIE_PROMPT,
             generate_responses=True,
             model_name="gpt-4o",
