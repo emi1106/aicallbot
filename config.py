@@ -1,85 +1,54 @@
+# config.py
+
 import os
 from dotenv import load_dotenv
+from vocode.streaming.models.agent import ChatGPTAgentConfig
+from vocode.streaming.models.synthesizer import ElevenLabsSynthesizerConfig
+from vocode.streaming.models.transcriber import DeepgramTranscriberConfig
+from vocode.streaming.models.telephony import TwilioConfig
 from prompt import LOVITURA_DE_GRATIE_PROMPT
 
-
 class ConfigManager:
-    """Configuration manager for the Stefan AI phone bot"""
-    
     def __init__(self):
         load_dotenv()
-        self._validate_env_vars()
-    
-    def _validate_env_vars(self):
-        """Validate that all required environment variables are set"""
-        required_vars = [
-            'OPENAI_API_KEY',
-            'ELEVENLABS_API_KEY',
-            'ELEVENLABS_VOICE_ID',
-            'DEEPGRAM_API_KEY',
-            'TWILIO_ACCOUNT_SID',
-            'TWILIO_AUTH_TOKEN',
-            'TWILIO_PHONE_NUMBER',
-            'N8N_WEBHOOK_URL',
-            'BASE_URL',
-            'PORT'
-        ]
         
-        missing_vars = [var for var in required_vars if not os.getenv(var)]
-        if missing_vars:
-            raise ValueError(f"Missing required environment variables: {', '.join(missing_vars)}")
-    
-    @property
-    def openai_api_key(self):
-        """Get the OpenAI API key"""
-        return os.getenv('OPENAI_API_KEY')
-    
-    @property
-    def elevenlabs_api_key(self):
-        """Get the ElevenLabs API key"""
-        return os.getenv('ELEVENLABS_API_KEY')
-    
-    @property
-    def elevenlabs_voice_id(self):
-        """Get the ElevenLabs voice ID"""
-        return os.getenv('ELEVENLABS_VOICE_ID')
-    
-    @property
-    def deepgram_api_key(self):
-        """Get the Deepgram API key"""
-        return os.getenv('DEEPGRAM_API_KEY')
-    
-    @property
-    def twilio_account_sid(self):
-        """Get the Twilio Account SID"""
-        return os.getenv('TWILIO_ACCOUNT_SID')
-    
-    @property
-    def twilio_auth_token(self):
-        """Get the Twilio Auth Token"""
-        return os.getenv('TWILIO_AUTH_TOKEN')
-    
-    @property
-    def twilio_phone_number(self):
-        """Get the Twilio Phone Number"""
-        return os.getenv('TWILIO_PHONE_NUMBER')
-    
-    @property
-    def webhook_url(self):
-        """Get the N8N webhook URL"""
-        return os.getenv('N8N_WEBHOOK_URL')
-    
-    @property
-    def base_url(self):
-        """Get the base URL for the application"""
-        return os.getenv('BASE_URL')
-    
-    @property
-    def port(self):
-        """Get the port for the application"""
-        return int(os.getenv('PORT', 8000))
-    
-    @property
-    def agent_prompt(self):
-        """Get the agent prompt"""
-        return LOVITURA_DE_GRATIE_PROMPT
+        # Base URLs and Keys
+        self.openai_api_key = os.getenv("OPENAI_API_KEY")
+        self.n8n_webhook_url = os.getenv("N8N_WEBHOOK_URL")
+        self.base_url = os.getenv("BASE_URL")
+
+        # Agent Config (The "Brain")
+        self.agent_config = ChatGPTAgentConfig(
+            initial_message="Bună ziua, numele meu este Ștefan de la WEMI, ne ocupam cu dezvoltarea web. Cu cine vorbesc?",
+            prompt_preamble=LOVITURA_DE_GRATIE_PROMPT,
+            generate_responses=True,
+            model_name="gpt-4o", # Use the fast and smart "omni" model
+            temperature=0.7,
+            end_conversation_on_goodbye=True,
+            send_filler_audio=True,
+            allowed_idle_time_seconds=30,
+        )
+
+        # Transcriber Config (The "Ears")
+        self.transcriber_config = DeepgramTranscriberConfig(
+            language="ro",
+            model="nova-2",
+            api_key=os.getenv("DEEPGRAM_API_KEY"),
+        )
+
+        # Synthesizer Config (The "Mouth")
+        self.synthesizer_config = ElevenLabsSynthesizerConfig(
+            api_key=os.getenv("ELEVENLABS_API_KEY"),
+            voice_id=os.getenv("ELEVENLABS_VOICE_ID"),
+            stability=0.7,
+            similarity_boost=0.75,
+            model_id="eleven_multilingual_v2",
+            optimize_streaming_latency=1,
+        )
+
+        # Twilio Config (The "Phone Line")
+        self.twilio_config = TwilioConfig(
+            account_sid=os.getenv("TWILIO_ACCOUNT_SID"),
+            auth_token=os.getenv("TWILIO_AUTH_TOKEN"),
+            phone_number=os.getenv("TWILIO_PHONE_NUMBER"),
+        )

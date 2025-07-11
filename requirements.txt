@@ -1,9 +1,4 @@
+vocode
 python-dotenv
 aiohttp
-openai>=1.12.0
-twilio
-elevenlabs
-fastapi
-uvicorn[standard]
-pydub
-deepgram-sdk
+openai

@@ -1,12 +1,10 @@
 # nixpacks.toml for Railway deployment
-# Note: If this fails, Railway should automatically detect and use Dockerfile instead
 
+# Phase 1: Install a complete set of system packages required by the Azure Speech SDK (a sub-dependency of vocode).
 [phases.setup]
-nixPkgs = ["python39"]
+nixPkgs = ["...", "libuuid", "alsa-lib", "openssl_3"]
 
-[phases.install]
-# Let pip handle all dependencies
-cmds = ["pip install -r requirements.txt"]
-
+# Phase 2: Define how to start the app, setting the environment variable
+# correctly before the command runs. This fixes the library path issue.
 [start]
-cmd = "python main.py"
+cmd = "LD_LIBRARY_PATH=${pkgs.lib.makeLibraryPath [ pkgs.libuuid pkgs.alsa-lib pkgs.openssl_3 ]} python main.py"
