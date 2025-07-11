@@ -1,5 +1,4 @@
-vocode==0.2.14
+vocode==0.2.11
 python-dotenv
 aiohttp
 openai
-# Deepgram SDK
