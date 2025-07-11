@@ -35,6 +35,10 @@ class ConfigManager:
             language="ro",
             model="nova-2",
             api_key=os.getenv("DEEPGRAM_API_KEY"),
+            # Add the following required parameters for telephony
+            sampling_rate=8000,
+            audio_encoding="mulaw",
+            chunk_size=2048,
         )
 
         # Synthesizer Config (The "Mouth")
