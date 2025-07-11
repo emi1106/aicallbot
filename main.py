@@ -1,9 +1,10 @@
-# main.py (The Final, Correct Architecture)
+# main.py (The Final, Final, Correct Version)
 
 import logging
 import os
 from vocode.streaming.telephony.server.base import TelephonyServer
 from vocode.streaming.models.events import EventType
+from vocode.streaming.models.telephony import InboundCallConfig  # <-- 1. ADD THIS IMPORT
 from config import ConfigManager
 from agent import StefanAgentActions
 
@@ -19,23 +20,22 @@ def main():
         agent_actions = StefanAgentActions(config_manager)
 
         # Create the Telephony Server.
-        # We use inbound_call_configs (plural) to define a template
-        # for calls that come into a specific URL.
-       # Create the Telephony Server.
+        # We use a list of InboundCallConfig OBJECTS, not dictionaries.
         telephony_server = TelephonyServer(
             base_url=config_manager.base_url,
             inbound_call_configs=[
-                {
-                    "url": "/inbound_call",
-                    "agent_config": config_manager.agent_config,
-                    "twilio_config": config_manager.twilio_config,
-                    "transcriber_config": config_manager.transcriber_config,
-                    "synthesizer_config": config_manager.synthesizer_config,
-                }
+                # 2. CHANGE THE DICTIONARY TO AN InboundCallConfig OBJECT
+                InboundCallConfig(
+                    url="/inbound_call",
+                    agent_config=config_manager.agent_config,
+                    twilio_config=config_manager.twilio_config,
+                    transcriber_config=config_manager.transcriber_config,
+                    synthesizer_config=config_manager.synthesizer_config,
+                )
             ],
-            config_manager=config_manager, # <-- ADD THIS LINE
+            config_manager=config_manager,
         )
-        
+
         # Register the event handler for when a call ends
         telephony_server.events_manager.register_handler(
             EventType.CALL_ENDED, agent_actions.handle_call_end
